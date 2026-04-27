@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  nombre      String
+  duracionDias Int
+  precio      Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  socios      Socio[]
+}
+
+model Socio {
+  id          String   @id @default(cuid())
+  dni         String   @unique
+  nombre      String
+  apellido    String
+  telefono    String?
+  fechaNacimiento DateTime?
+  fotoUrl     String?
+  planId      String
+  plan        Plan     @relation(fields: [planId], references: [id])
+  fechaInicio DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pagos       Pago[]
+  fichajes    Fichaje[]
+}
+
+model Pago {
+  id          String   @id @default(cuid())
+  socioId     String
+  socio       Socio    @relation(fields: [socioId], references: [id])
+  monto       Float
+  metodo      String
+  fechaPago   DateTime @default(now())
+  mes         Int
+  anio        Int
+  createdAt   DateTime @default(now())
+}
+
+model Fichaje {
+  id        String   @id @default(cuid())
+  socioId   String
+  socio     Socio    @relation(fields: [socioId], references: [id])
+  fechaHora DateTime @default(now())
+  createdAt DateTime @default(now())
+}
