@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Socio, Pago, Fichaje, Plan } from "@prisma/client";
 
 type SocioConEstado = Socio & {
@@ -39,6 +39,10 @@ async function createSocio(data: {
   planId: string;
   fechaInicio: string;
   fotoUrl?: string;
+  telefono?: string;
+  horarioEntrenamiento?: string;
+  grupoMuscular?: string;
+  objetivoCliente?: string;
 }): Promise<Socio> {
   const res = await fetch("/api/socios", {
     method: "POST",
@@ -54,7 +58,7 @@ async function createSocio(data: {
 
 async function updateSocio(
   id: string,
-  data: { nombre?: string; apellido?: string; planId?: string; fotoUrl?: string; telefono?: string | null; fechaNacimiento?: string | null }
+  data: { nombre?: string; apellido?: string; planId?: string; fotoUrl?: string; telefono?: string | null; fechaNacimiento?: string | null; horarioEntrenamiento?: string; grupoMuscular?: string; objetivoCliente?: string }
 ): Promise<Socio> {
   const res = await fetch(`/api/socios/${id}`, {
     method: "PUT",

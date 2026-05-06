@@ -1,145 +1,384 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useSocios } from "@/hooks/useSocios";
 import { usePagos } from "@/hooks/usePagos";
 import { useFichajes } from "@/hooks/useFichajes";
-import { usePlanes } from "@/hooks/usePlanes";
 import {
   Users,
   TrendingUp,
   AlertTriangle,
-  Calendar,
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
   Trophy,
-  Flame,
+  Medal,
   ShieldCheck,
   CheckCircle2,
+  Award,
 } from "lucide-react";
-
-const MESES = [
-  "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
-];
+import {
+  AreaChart,
+  Area,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  colors,
+  fontFamily,
+  fontSize,
+  fontWeight,
+  spacing,
+  borderRadius,
+  grid,
+  animation,
+  chartConfig,
+  planColors,
+  medalColors,
+  getAvatarColor,
+  getInitials,
+  cardStyle,
+  cardHoverStyle,
+  textStyle,
+  badgeStyle,
+  tagStyle,
+  formatCurrencyARS,
+  formatMonth,
+} from "@/lib/design-system";
 
 // ---------------------------------------------------------------------------
-// StatCard Component
+// CountUp Hook
 // ---------------------------------------------------------------------------
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  trend?: { value: number; positive: boolean };
+function useCountUp(target: number, duration = 1400): number {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration]);
+
+  return count;
 }
 
-export function StatCard({ label, value, icon, trend }: StatCardProps) {
+// ---------------------------------------------------------------------------
+// Animation Variants
+// ---------------------------------------------------------------------------
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: animation.easing },
+  },
+};
+
+const fadeInLeft = {
+  hidden: { opacity: 0, x: -10 },
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.35, ease: animation.easing },
+  },
+};
+
+const containerStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: animation.staggerList } },
+};
+
+// ---------------------------------------------------------------------------
+// KPI Card
+// ---------------------------------------------------------------------------
+interface KpiCardProps {
+  label: string;
+  value: number;
+  prefix?: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+  trend?: { value: number; positive: boolean } | null;
+  statusBadge?: string | null;
+  statusType?: "success" | "danger" | null;
+  index: number;
+}
+
+function KpiCard({
+  label,
+  value,
+  prefix = "",
+  icon,
+  iconBg,
+  iconColor,
+  trend,
+  statusBadge,
+  statusType,
+  index,
+}: KpiCardProps) {
+  const count = useCountUp(value);
+
   return (
-    <div
-      className="
-        flex flex-col justify-between
-        p-6 rounded-2xl min-h-[140px]
-        bg-[var(--bg-card)] border border-[var(--border)]
-        transition-all duration-300
-        hover:border-[var(--accent)] hover:shadow-lg
-        animate-in fade-in slide-in-from-bottom-2 duration-500
-      "
+    <motion.div
+      variants={fadeUp}
+      initial="hidden"
+      animate="show"
+      transition={{ delay: index * animation.staggerKpi }}
     >
-      <div className="flex items-start justify-between">
-        <div
-          className="
-            w-12 h-12 rounded-xl flex items-center justify-center
-            bg-[var(--accent)]/10 text-[var(--accent)]
-          "
-        >
-          {icon}
-        </div>
-        {trend && (
+      <Card
+        className="group cursor-default flex flex-col"
+        style={{
+          ...cardStyle(),
+          padding: `${spacing[5]}px`,
+          minHeight: 148,
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLDivElement;
+          Object.assign(el.style, cardHoverStyle());
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.borderColor = colors.border;
+          el.style.transform = "";
+          el.style.boxShadow = "none";
+        }}
+      >
+        {/* Top row: icon + status badge */}
+        <div className="flex items-start justify-between mb-auto">
           <div
-            className={`
-              flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full
-              ${trend.positive
-                ? "bg-emerald-500/15 text-emerald-400"
-                : "bg-red-500/15 text-red-400"
-              }
-            `}
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: iconBg, color: iconColor }}
           >
-            {trend.positive
-              ? <ArrowUpRight className="w-3 h-3" />
-              : <ArrowDownRight className="w-3 h-3" />
-            }
-            {Math.abs(trend.value)}%
+            {icon}
+          </div>
+          {statusBadge && (
+            <div
+              className="text-xs font-semibold px-2 py-0.5 rounded-full"
+              style={{
+                ...badgeStyle(statusType ?? "neutral"),
+                fontFamily: fontFamily.dmSans,
+              }}
+            >
+              {statusBadge}
+            </div>
+          )}
+        </div>
+
+        {/* Center: KPI value + label, centered */}
+        <div className="flex flex-col items-center justify-center flex-1 py-2">
+          <p className="leading-none mb-1" style={textStyle("kpi")}>
+            {prefix}
+            {count.toLocaleString("es-AR")}
+          </p>
+          <p style={textStyle("label")}>{label}</p>
+        </div>
+
+        {/* Bottom: trend badge */}
+        {trend && (
+          <div className="flex items-center justify-end mt-auto">
+            <div
+              className="flex items-center gap-0.5 text-xs font-semibold"
+              style={{
+                background: trend.positive ? colors.successBg : colors.dangerBg,
+                color: trend.positive ? colors.success : colors.danger,
+                padding: "3px 8px",
+                borderRadius: borderRadius.full,
+                fontFamily: fontFamily.dmSans,
+              }}
+            >
+              {trend.positive ? (
+                <ArrowUpRight className="w-3 h-3" />
+              ) : (
+                <ArrowDownRight className="w-3 h-3" />
+              )}
+              {Math.abs(trend.value)}%
+            </div>
           </div>
         )}
-      </div>
-
-      <div className="mt-4">
-        <p
-          className="
-            text-sm font-medium mb-2
-            [color:var(--text-secondary)]
-          "
-        >
-          {label}
-        </p>
-        <p
-          className="
-            text-4xl font-extrabold leading-none
-            [font-family:'Plus_Jakarta_Sans',sans-serif]
-          "
-          style={{ color: "var(--text-primary)" }}
-        >
-          {value}
-        </p>
-      </div>
-    </div>
+      </Card>
+    </motion.div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// RevenueChart Component
+// Income Chart
 // ---------------------------------------------------------------------------
-interface RevenueChartProps {
-  data: { mes: string; total: number }[];
-  maxValue: number;
+interface ChartDataPoint {
+  mes: string;
+  total: number;
 }
 
-function RevenueChart({ data, maxValue }: RevenueChartProps) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
   return (
-    <div className="h-52 flex items-end justify-between gap-2 px-2">
-      {data.map((item, i) => {
-        const height = maxValue > 0 ? (item.total / maxValue) * 100 : 0;
+    <div
+      style={{
+        background: chartConfig.tooltipBg,
+        border: `1px solid ${chartConfig.tooltipBorder}`,
+        borderRadius: chartConfig.tooltipRadius,
+        padding: `${spacing[3]}px ${spacing[4]}px`,
+        fontFamily: fontFamily.dmSans,
+        fontSize: fontSize.sm,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+      }}
+    >
+      <p style={{ color: colors.textSecondary, marginBottom: spacing[1], fontSize: fontSize.xs }}>
+        {label}
+      </p>
+      <p style={{ color: colors.accent, fontWeight: fontWeight.bold, fontSize: fontSize.md }}>
+        {formatCurrencyARS(payload[0].value)}
+      </p>
+    </div>
+  );
+}
+
+function IncomeAreaChart({ data }: { data: ChartDataPoint[] }) {
+  const hasData = data.some((d) => d.total > 0);
+
+  if (!hasData) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center h-52 gap-2"
+        style={{ color: colors.textSecondary }}
+      >
+        <TrendingUp className="w-8 h-8 opacity-30" />
+        <p style={{ fontSize: fontSize.sm, fontFamily: fontFamily.dmSans }}>
+          Sin datos de ingresos
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <AreaChart data={data} margin={{ top: spacing[1], right: 0, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id={chartConfig.gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={chartConfig.gradientFrom} />
+            <stop offset="95%" stopColor={chartConfig.gradientTo} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid
+          strokeDasharray="0"
+          stroke={chartConfig.cartesianGridStroke}
+          horizontal={true}
+          vertical={false}
+        />
+        <Tooltip
+          content={<CustomTooltip />}
+          cursor={{ stroke: "rgba(124,111,205,0.2)", strokeWidth: 1 }}
+        />
+        <Area
+          type="monotone"
+          dataKey="total"
+          stroke={chartConfig.lineColor}
+          strokeWidth={chartConfig.lineWidth}
+          fill={`url(#${chartConfig.gradientId})`}
+          dot={false}
+          activeDot={{ r: 4, fill: chartConfig.lineColor, strokeWidth: 0 }}
+          animationDuration={1000}
+          animationEasing="ease-out"
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Plan Distribution
+// ---------------------------------------------------------------------------
+interface PlanDistItem {
+  nombre: string;
+  count: number;
+  percentage: number;
+}
+
+function PlanDistributionPanel({ data }: { data: PlanDistItem[] }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-5">
+      {data.slice(0, 3).map((item, i) => {
+        const color = planColors[item.nombre] ?? colors.accent;
         return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-2">
-            <div className="w-full relative group">
-              <div
-                className="
-                  w-full rounded-t-lg
-                  bg-gradient-to-t from-[var(--accent)] to-[var(--accent)]/60
-                  transition-all duration-500 ease-out
-                "
-                style={{ height: `${Math.max(height, 4)}%` }}
-              />
-              <div
-                className="
-                  absolute -top-8 left-1/2 -translate-x-1/2
-                  bg-[var(--bg-card)] border border-[var(--border)]
-                  text-xs px-2 py-1 rounded-lg
-                  opacity-0 group-hover:opacity-100 transition-opacity
-                  whitespace-nowrap font-medium shadow-lg
-                  [color:var(--text-primary)]
-                "
-              >
-                ${item.total.toLocaleString()}
+          <div key={i} className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ background: color }}
+                />
+                <span
+                  style={{
+                    fontFamily: fontFamily.dmSans,
+                    fontSize: fontSize.md,
+                    color: colors.textPrimary,
+                    fontWeight: fontWeight.medium,
+                  }}
+                >
+                  {item.nombre}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  style={{
+                    fontFamily: fontFamily.dmSans,
+                    fontSize: fontSize.sm,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  {item.count} socios
+                </span>
+                <span
+                  style={{
+                    fontFamily: fontFamily.syne,
+                    fontSize: fontSize.md,
+                    fontWeight: fontWeight.bold,
+                    color,
+                    minWidth: 36,
+                    textAlign: "right",
+                  }}
+                >
+                  {item.percentage}%
+                </span>
               </div>
             </div>
-            <span
-              className="text-xs font-medium"
-              style={{ color: "var(--text-secondary)" }}
+            <div
+              className="h-1.5 rounded-full overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.06)" }}
             >
-              {item.mes}
-            </span>
+              <div
+                style={{
+                  background: color,
+                  height: "100%",
+                  borderRadius: 3,
+                  width: mounted ? `${item.percentage}%` : "0%",
+                  transition: `width 0.8s cubic-bezier(0.4,0,0.2,1) ${i * 0.12}s`,
+                }}
+              />
+            </div>
           </div>
         );
       })}
@@ -148,219 +387,234 @@ function RevenueChart({ data, maxValue }: RevenueChartProps) {
 }
 
 // ---------------------------------------------------------------------------
-// PlanDistribution Component
-// ---------------------------------------------------------------------------
-interface PlanDistItem {
-  nombre: string;
-  count: number;
-  percentage: number;
-}
-
-const PLAN_COLORS = [
-  "bg-violet-500",
-  "bg-emerald-500",
-  "bg-amber-500",
-  "bg-rose-500",
-  "bg-cyan-500",
-] as const;
-
-function PlanDistribution({ data }: { data: PlanDistItem[] }) {
-  return (
-    <div className="space-y-4">
-      {data.map((item, i) => (
-        <div key={i}>
-          <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium">{item.nombre}</span>
-            <div className="flex items-center gap-2">
-              <span
-                className="text-sm"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {item.count}
-              </span>
-              <span
-                className={`
-                  text-xs font-bold px-2 py-0.5 rounded-full
-                  ${PLAN_COLORS[i % PLAN_COLORS.length]}/15 ${PLAN_COLORS[i % PLAN_COLORS.length].replace("bg-", "text-")}
-                `}
-              >
-                {item.percentage}%
-              </span>
-            </div>
-          </div>
-          <div
-            className="h-3 rounded-full overflow-hidden"
-            style={{ backgroundColor: "var(--bg-secondary)" }}
-          >
-            <div
-              className={`h-full rounded-full transition-all duration-700 ease-out ${PLAN_COLORS[i % PLAN_COLORS.length]}`}
-              style={{ width: `${item.percentage}%` }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// TopSociosRanking Component
+// Top Socios List
 // ---------------------------------------------------------------------------
 interface TopSocioItem {
   nombre: string;
   count: number;
 }
 
-function TopSociosRanking({ data }: { data: TopSocioItem[] }) {
-  const medals = ["🥇", "🥈", "🥉"];
-
-  if (data.length === 0) {
+function TopSociosList({ data }: { data: TopSocioItem[] }) {
+  if (!data || data.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center py-12 gap-2"
-        style={{ color: "var(--text-secondary)" }}
+        className="flex flex-col items-center justify-center py-10 gap-2"
+        style={{ color: colors.textSecondary }}
       >
-        <Users className="w-12 h-12 opacity-50" />
-        <p>Sin datos disponibles</p>
+        <Users className="w-8 h-8 opacity-30" />
+        <p style={{ fontSize: fontSize.sm, fontFamily: fontFamily.dmSans }}>
+          Sin datos disponibles
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {data.map((socio, i) => (
-        <div
-          key={i}
-          className="
-            flex items-center gap-4 p-4 rounded-xl
-            border transition-all duration-200
-            hover:scale-[1.01]
-            [bg-[var(--bg-card)] border-[var(--border)]]
-            hover:border-[var(--accent)]/30
-          "
-        >
-          <div
-            className="
-              w-10 h-10 rounded-xl flex items-center justify-center
-              text-lg font-bold
-              bg-[var(--bg-secondary)]
-            "
+    <motion.div
+      variants={containerStagger}
+      initial="hidden"
+      animate="show"
+      className="flex flex-col"
+    >
+      {data.map((socio, i) => {
+        const { bg, accent } = getAvatarColor(socio.nombre);
+        const initials = getInitials(socio.nombre);
+        const medalColor = medalColors[i] ?? colors.textSecondary;
+
+        return (
+          <motion.div
+            key={i}
+            variants={fadeInLeft}
+            className="flex items-center gap-3 py-3 rounded-lg px-2 -mx-2 cursor-default"
+            style={{
+              borderBottom:
+                i < data.length - 1
+                  ? `1px solid ${colors.borderSubtle}`
+                  : "none",
+              transition: `background ${animation.normal} ease`,
+            }}
+            whileHover={{ background: "rgba(255,255,255,0.03)" }}
           >
-            {i < 3 ? medals[i] : `#${i + 1}`}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold truncate">{socio.nombre}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <Flame className="w-3 h-3 text-orange-400" />
-              <span
-                className="text-xs"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {socio.count} visitas
-              </span>
+            <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+              {i < 3 ? (
+                <Medal className="w-5 h-5" style={{ color: medalColor }} />
+              ) : (
+                <span
+                  style={{
+                    fontFamily: fontFamily.syne,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.bold,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  #{i + 1}
+                </span>
+              )}
             </div>
-          </div>
 
-          <div className="flex items-center gap-1">
-            {Array.from({ length: Math.min(socio.count, 5) }).map((_, idx) => (
-              <div
-                key={idx}
-                className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-400 to-amber-500"
-              />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
+            <Avatar size="sm" className="flex-shrink-0">
+              <AvatarFallback
+                style={{
+                  background: bg,
+                  color: accent,
+                  fontSize: fontSize.xs,
+                  fontWeight: fontWeight.bold,
+                  fontFamily: fontFamily.dmSans,
+                }}
+              >
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-sm truncate"
+                style={{
+                  fontFamily: fontFamily.dmSans,
+                  fontWeight: fontWeight.medium,
+                  color: colors.textPrimary,
+                }}
+              >
+                {socio.nombre}
+              </p>
+              <div className="flex items-center gap-1">
+                <Trophy className="w-3 h-3" style={{ color: colors.amber }} />
+                <span
+                  style={{
+                    fontSize: fontSize.xs,
+                    fontFamily: fontFamily.dmSans,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  {socio.count} visitas
+                </span>
+              </div>
+            </div>
+
+            <span
+              style={{
+                fontSize: fontSize.xs,
+                fontFamily: fontFamily.syne,
+                fontWeight: fontWeight.bold,
+                color: colors.textSecondary,
+              }}
+            >
+              #{i + 1}
+            </span>
+          </motion.div>
+        );
+      })}
+    </motion.div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// DebtorsList Component
+// Debtors Panel
 // ---------------------------------------------------------------------------
 interface DebtorItem {
   id: string;
   nombre: string;
   apellido: string;
   plan: { nombre: string };
-  tieneDeuda: boolean;
 }
 
-function DebtorsList({ data }: { data: DebtorItem[] }) {
-  if (!data || data.length === 0) {
+function DebtorsPanel({ data }: { data: DebtorItem[] }) {
+  if (data.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center py-12 gap-2"
-        style={{ color: "var(--text-secondary)" }}
+        className="flex flex-col items-center justify-center py-8 gap-2 rounded-xl"
+        style={tagStyle.success}
       >
-        <CheckCircle2 className="w-12 h-12 text-emerald-400 opacity-60" />
-        <p className="font-medium text-emerald-400">Sin deudas</p>
-        <p className="text-sm">Todos los socios están al día</p>
+        <CheckCircle2 className="w-7 h-7" style={{ color: colors.success }} />
+        <p
+          style={{
+            fontSize: fontSize.md,
+            fontWeight: fontWeight.semibold,
+            color: colors.success,
+            fontFamily: fontFamily.dmSans,
+          }}
+        >
+          Sin más deudas este mes
+        </p>
+        <p
+          style={{
+            fontSize: fontSize.xs,
+            fontFamily: fontFamily.dmSans,
+            color: colors.textSecondary,
+          }}
+        >
+          Todos los socios están al día
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <motion.div
+      variants={containerStagger}
+      initial="hidden"
+      animate="show"
+      className="flex flex-col"
+    >
       {data.map((socio) => (
-        <div
+        <motion.div
           key={socio.id}
-          className="
-            flex items-center gap-4 p-4 rounded-xl
-            border border-red-500/20
-            bg-[var(--bg-card)]
-            transition-all duration-200
-            hover:border-red-500/40
-          "
+          variants={fadeInLeft}
+          className="flex items-center gap-3 py-3 rounded-lg px-2 -mx-2 cursor-default"
+          style={{ borderBottom: `1px solid ${colors.borderSubtle}` }}
+          whileHover={{ background: "rgba(232,81,74,0.04)" }}
         >
-          <div
-            className="
-              w-12 h-12 rounded-xl flex items-center justify-center
-              text-lg font-bold
-              bg-red-500/15 text-red-400
-              border border-red-500/20
-            "
-          >
-            {socio.nombre[0]}
-          </div>
+          <Avatar size="sm" className="flex-shrink-0">
+            <AvatarFallback
+              style={{
+                background: colors.dangerBg,
+                color: colors.danger,
+                fontSize: fontSize.xs,
+                fontWeight: fontWeight.bold,
+                fontFamily: fontFamily.dmSans,
+              }}
+            >
+              {socio.nombre[0]}
+            </AvatarFallback>
+          </Avatar>
 
           <div className="flex-1 min-w-0">
-            <p className="font-semibold">
+            <p
+              className="text-sm truncate"
+              style={{
+                fontFamily: fontFamily.dmSans,
+                fontWeight: fontWeight.medium,
+                color: colors.textPrimary,
+              }}
+            >
               {socio.nombre} {socio.apellido}
             </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span
-                className="text-xs px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "var(--bg-secondary)" }}
-              >
-                {socio.plan.nombre}
-              </span>
-            </div>
+            <span
+              style={{
+                fontSize: fontSize.xs,
+                fontFamily: fontFamily.dmSans,
+                color: colors.textSecondary,
+              }}
+            >
+              {socio.plan.nombre}
+            </span>
           </div>
 
-          <span
-            className="
-              text-xs font-bold px-3 py-1 rounded-full
-              bg-red-500/15 text-red-400
-            "
-          >
-            PENDIENTE
-          </span>
-        </div>
+          <div style={tagStyle.pendiente}>Pendiente</div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Main Page Component
+// Page Component
 // ---------------------------------------------------------------------------
+
 export default function EstadisticasPage() {
   const { data: socios } = useSocios();
   const { data: pagos } = usePagos();
   const { data: fichajes } = useFichajes(false);
-  const { data: planes } = usePlanes();
 
   const stats = useMemo(() => {
     const hoy = new Date();
@@ -375,11 +629,10 @@ export default function EstadisticasPage() {
         sociosAlDia: 0,
         sociosConDeuda: 0,
         ingresosMes: 0,
-        fichajesMes: 0,
-        evolucionIngresos: [] as { mes: string; total: number }[],
+        evolucionIngresos: [] as ChartDataPoint[],
         distribucionPlanes: [] as PlanDistItem[],
         topSocios: [] as TopSocioItem[],
-        trends: { socios: 0, ingresos: 0, fichajes: 0 },
+        trends: { ingresos: 0 as number },
       };
     }
 
@@ -395,42 +648,40 @@ export default function EstadisticasPage() {
       .filter((p) => p.mes === mesAnterior && p.anio === anioAnterior)
       .reduce((sum, p) => sum + p.monto, 0);
 
-    const fichajesMes = fichajes
-      ? fichajes.filter((f) => {
-          const fMes = new Date(f.fechaHora).getMonth() + 1;
-          const fAnio = new Date(f.fechaHora).getFullYear();
-          return fMes === mesActual && fAnio === anioActual;
-        }).length
-      : 0;
-
-    const fichajesMesAnterior = fichajes
-      ? fichajes.filter((f) => {
-          const fFecha = new Date(f.fechaHora);
-          const fMes = fFecha.getMonth() + 1;
-          const fAnio = fFecha.getFullYear();
-          return fMes === mesAnterior && fAnio === anioAnterior;
-        }).length
-      : 0;
-
-    const evolucionIngresos = MESES.slice(0, mesActual).map((mes, i) => {
-      const mesNum = i + 1;
+    const evolucionIngresos: ChartDataPoint[] = [3, 2, 1, 0].map((offset) => {
+      let m = mesActual - offset;
+      let y = anioActual;
+      if (m <= 0) {
+        m += 12;
+        y -= 1;
+      }
+      const mesName = new Date(y, m - 1, 1).toLocaleString("es-ES", {
+        month: "short",
+      });
       const total = pagos
-        .filter((p) => p.mes === mesNum && p.anio === anioActual)
+        .filter((p) => p.mes === m && p.anio === y)
         .reduce((sum, p) => sum + p.monto, 0);
-      return { mes, total };
+      return {
+        mes: mesName.charAt(0).toUpperCase() + mesName.slice(1),
+        total,
+      };
     });
 
     const planCounts: Record<string, number> = {};
     socios.forEach((s) => {
-      const planNombre = s.plan.nombre;
-      planCounts[planNombre] = (planCounts[planNombre] || 0) + 1;
+      planCounts[s.plan.nombre] = (planCounts[s.plan.nombre] || 0) + 1;
     });
 
-    const distribucionPlanes = Object.entries(planCounts).map(([nombre, count]) => ({
-      nombre,
-      count,
-      percentage: Math.round((count / totalSocios) * 100),
-    }));
+    const distribucionPlanes: PlanDistItem[] = Object.entries(planCounts).map(
+      ([nombre, count]) => ({
+        nombre,
+        count,
+        percentage:
+          totalSocios > 0
+            ? Math.round((count / totalSocios) * 100)
+            : 0,
+      })
+    );
 
     const socioFichajes: Record<string, number> = {};
     fichajes?.forEach((f) => {
@@ -438,12 +689,12 @@ export default function EstadisticasPage() {
       socioFichajes[nombre] = (socioFichajes[nombre] || 0) + 1;
     });
 
-    const topSocios = Object.entries(socioFichajes)
+    const topSocios: TopSocioItem[] = Object.entries(socioFichajes)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([nombre, count]) => ({ nombre, count }));
 
-    const calcTrend = (current: number, previous: number) => {
+    const calcTrend = (current: number, previous: number): number => {
       if (previous === 0) return 0;
       return Math.round(((current - previous) / previous) * 100);
     };
@@ -453,245 +704,232 @@ export default function EstadisticasPage() {
       sociosAlDia,
       sociosConDeuda,
       ingresosMes,
-      fichajesMes,
       evolucionIngresos,
       distribucionPlanes,
       topSocios,
       trends: {
-        socios: calcTrend(totalSocios, totalSocios - (sociosConDeuda > 0 ? 1 : 0)),
         ingresos: calcTrend(ingresosMes, ingresosMesAnterior),
-        fichajes: calcTrend(fichajesMes, fichajesMesAnterior),
       },
     };
   }, [socios, pagos, fichajes]);
 
-  const maxIngreso = Math.max(...stats.evolucionIngresos.map((e) => e.total), 1);
-  const currentMonth = new Date().toLocaleString("es-ES", { month: "long" });
+  const currentMonth = formatMonth(new Date());
 
   return (
-    <div className="min-h-screen p-6 lg:p-8">
+    <div
+      className="page-container"
+      style={{ padding: spacing[7], background: colors.bgBase, minHeight: "100vh" }}
+    >
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div
-            className="
-              w-10 h-10 rounded-xl flex items-center justify-center
-              [background:var(--accent)]
-            "
-          >
-            <TrendingUp className="w-5 h-5 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">Estadísticas</h1>
-        </div>
+      <div className="mb-6 flex flex-col gap-1">
+        <h1 style={textStyle("heading")}>Estadísticas</h1>
         <p
-          className="ml-13 capitalize text-sm"
-          style={{ color: "var(--text-secondary)" }}
+          style={{
+            ...textStyle("subheading"),
+            textTransform: "capitalize",
+          }}
         >
           {currentMonth} {new Date().getFullYear()}
         </p>
       </div>
 
-      {/* Stats Grid - 3 columns */}
+      {/* FILA 1 — KPI Cards */}
       <div
-        className="
-          grid gap-4 mb-6
-          grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
-        "
+        style={{
+          display: "grid",
+          gridTemplateColumns: grid.kpiColumns,
+          gap: grid.gap,
+          marginBottom: grid.gap,
+        }}
       >
-        <StatCard
+        <KpiCard
           label="Total Socios"
           value={stats.totalSocios}
-          icon={<Users className="w-5 h-5" />}
+          icon={<Users className="w-4 h-4" />}
+          iconBg={colors.accentBg}
+          iconColor={colors.accent}
+          index={0}
         />
-        <StatCard
+        <KpiCard
           label="Al día"
           value={stats.sociosAlDia}
-          icon={<ShieldCheck className="w-5 h-5" />}
+          icon={<ShieldCheck className="w-4 h-4" />}
+          iconBg={colors.successBg}
+          iconColor={colors.success}
+          statusBadge="Al día"
+          statusType="success"
+          index={1}
         />
-        <StatCard
+        <KpiCard
           label="Con deuda"
           value={stats.sociosConDeuda}
-          icon={<AlertTriangle className="w-5 h-5" />}
+          icon={<AlertTriangle className="w-4 h-4" />}
+          iconBg={colors.dangerBg}
+          iconColor={colors.danger}
+          statusBadge={
+            stats.sociosConDeuda > 0 ? `+${stats.sociosConDeuda}` : undefined
+          }
+          statusType={stats.sociosConDeuda > 0 ? "danger" : undefined}
+          index={2}
         />
-        <StatCard
+        <KpiCard
           label="Ingresos del mes"
-          value={`$${stats.ingresosMes.toLocaleString()}`}
-          icon={<DollarSign className="w-5 h-5" />}
-          trend={{ value: Math.abs(stats.trends.ingresos), positive: stats.trends.ingresos >= 0 }}
-        />
-        <StatCard
-          label="Fichajes este mes"
-          value={stats.fichajesMes}
-          icon={<Calendar className="w-5 h-5" />}
-          trend={{ value: Math.abs(stats.trends.fichajes), positive: stats.trends.fichajes >= 0 }}
-        />
-        <StatCard
-          label="Planes activos"
-          value={planes?.length ?? 0}
-          icon={<Trophy className="w-5 h-5" />}
+          value={stats.ingresosMes}
+          prefix="$"
+          icon={<DollarSign className="w-4 h-4" />}
+          iconBg={colors.amberBg}
+          iconColor={colors.amber}
+          trend={
+            stats.trends.ingresos !== 0
+              ? {
+                  value: Math.abs(stats.trends.ingresos),
+                  positive: stats.trends.ingresos >= 0,
+                }
+              : null
+          }
+          index={3}
         />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3 mb-6">
-        {/* Revenue Chart */}
-        <div
-          className="
-            lg:col-span-2 rounded-2xl p-6
-            border [border-color:var(--border)]
-            bg-[var(--bg-card)]
-          "
+      {/* FILA 2 — Charts */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: grid.chartColumns,
+          gap: grid.gap,
+          marginBottom: grid.gap,
+        }}
+      >
+        {/* Income Chart */}
+        <Card
+          className="p-5"
+          style={cardStyle()}
         >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div
-                className="
-                  w-10 h-10 rounded-xl flex items-center justify-center
-                  bg-emerald-500/15 text-emerald-400
-                "
-              >
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Evolución de Ingresos</h3>
-                <p
-                  className="text-xs"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  Últimos {stats.evolucionIngresos.length} meses
-                </p>
-              </div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 style={{ ...textStyle("body"), fontWeight: fontWeight.semibold }}>
+                Evolución de Ingresos
+              </h3>
+              <p style={{ ...textStyle("caption"), marginTop: 2 }}>
+                Últimos 4 meses
+              </p>
             </div>
             <div className="text-right">
               <p
-                className="
-                  text-2xl font-bold
-                  [font-family:'Plus_Jakarta_Sans',sans-serif]
-                "
-                style={{ color: "var(--text-primary)" }}
+                style={{
+                  fontFamily: fontFamily.syne,
+                  fontSize: fontSize["2xl"],
+                  fontWeight: fontWeight.extrabold,
+                  color: colors.textPrimary,
+                  letterSpacing: "-0.03em",
+                }}
               >
-                ${stats.ingresosMes.toLocaleString()}
+                {formatCurrencyARS(stats.ingresosMes)}
               </p>
               <p
-                className="text-xs"
-                style={{ color: "var(--text-secondary)" }}
+                style={{
+                  ...textStyle("caption"),
+                  textTransform: "capitalize",
+                }}
               >
-                este mes
+                {currentMonth}
               </p>
             </div>
           </div>
-          <RevenueChart data={stats.evolucionIngresos} maxValue={maxIngreso} />
-        </div>
+          <IncomeAreaChart data={stats.evolucionIngresos} />
+        </Card>
 
         {/* Plan Distribution */}
-        <div
-          className="
-            rounded-2xl p-6
-            border [border-color:var(--border)]
-            bg-[var(--bg-card)]
-          "
+        <Card
+          className="p-5"
+          style={cardStyle()}
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div
-              className="
-                w-10 h-10 rounded-xl flex items-center justify-center
-                bg-amber-500/15 text-amber-400
-              "
-            >
-              <Trophy className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-semibold">Planes</h3>
-              <p
-                className="text-xs"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Distribución
-              </p>
-            </div>
+          <div className="mb-5">
+            <h3 style={{ ...textStyle("body"), fontWeight: fontWeight.semibold }}>
+              Distribución de Planes
+            </h3>
+            <p style={{ ...textStyle("caption"), marginTop: 2 }}>
+              Membresías activas
+            </p>
           </div>
-          <PlanDistribution data={stats.distribucionPlanes} />
-        </div>
+          <PlanDistributionPanel data={stats.distribucionPlanes} />
+        </Card>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-        {/* Top 5 Socios */}
-        <div
-          className="
-            rounded-2xl p-6
-            border [border-color:var(--border)]
-            bg-[var(--bg-card)]
-          "
+      {/* FILA 3 — Lists */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: grid.listColumns,
+          gap: grid.gap,
+        }}
+      >
+        {/* Top Socios */}
+        <Card
+          className="p-5"
+          style={cardStyle()}
         >
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-2 mb-4">
             <div
-              className="
-                w-10 h-10 rounded-xl flex items-center justify-center
-                bg-orange-500/15 text-orange-400
-              "
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: colors.amberBg, color: colors.amber }}
             >
-              <Flame className="w-5 h-5" />
+              <Award className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-semibold">Top 5 Socios</h3>
-              <p
-                className="text-xs"
-                style={{ color: "var(--text-secondary)" }}
-              >
+              <h3 style={{ ...textStyle("body"), fontWeight: fontWeight.semibold }}>
+                Top Socios
+              </h3>
+              <p style={{ ...textStyle("caption"), marginTop: 1 }}>
                 Más asiduos del mes
               </p>
             </div>
           </div>
-          <TopSociosRanking data={stats.topSocios} />
-        </div>
+          <TopSociosList data={stats.topSocios} />
+        </Card>
 
         {/* Debtors */}
-        <div
-          className="
-            rounded-2xl p-6
-            border [border-color:var(--border)]
-            bg-[var(--bg-card)]
-          "
+        <Card
+          className="p-5"
+          style={cardStyle()}
         >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
               <div
-                className="
-                  w-10 h-10 rounded-xl flex items-center justify-center
-                  bg-red-500/15 text-red-400
-                "
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: colors.dangerBg, color: colors.danger }}
               >
-                <AlertTriangle className="w-5 h-5" />
+                <AlertTriangle className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-semibold">Socios con Deuda</h3>
-                <p
-                  className="text-xs"
-                  style={{ color: "var(--text-secondary)" }}
-                >
+                <h3 style={{ ...textStyle("body"), fontWeight: fontWeight.semibold }}>
+                  Socios con Deuda
+                </h3>
+                <p style={{ ...textStyle("caption"), marginTop: 1 }}>
                   {stats.sociosConDeuda > 0
-                    ? `${stats.sociosConDeuda} pendiente${stats.sociosConDeuda > 1 ? "s" : ""}`
-                    : "Sin deudas"
-                  }
+                    ? `${stats.sociosConDeuda} pendiente${
+                        stats.sociosConDeuda > 1 ? "s" : ""
+                      }`
+                    : "Sin deudas"}
                 </p>
               </div>
             </div>
             {stats.sociosConDeuda > 0 && (
               <div
-                className="
-                  w-10 h-10 rounded-xl flex items-center justify-center
-                  bg-red-500/20
-                "
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                style={{
+                  background: colors.dangerBg,
+                  color: colors.danger,
+                }}
               >
-                <span className="text-lg font-bold text-red-400">
-                  {stats.sociosConDeuda}
-                </span>
+                {stats.sociosConDeuda}
               </div>
             )}
           </div>
-          <DebtorsList data={socios?.filter((s) => s.tieneDeuda).slice(0, 5) || []} />
-        </div>
+          <DebtorsPanel
+            data={socios?.filter((s) => s.tieneDeuda).slice(0, 5) ?? []}
+          />
+        </Card>
       </div>
     </div>
   );

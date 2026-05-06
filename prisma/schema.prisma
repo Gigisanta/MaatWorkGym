@@ -27,6 +27,9 @@ model Socio {
   planId      String
   plan        Plan     @relation(fields: [planId], references: [id])
   fechaInicio DateTime
+  horarioEntrenamiento String   @default("matutino")
+  grupoMuscular       String?
+  objetivoCliente     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   pagos       Pago[]
@@ -46,9 +49,29 @@ model Pago {
 }
 
 model Fichaje {
-  id        String   @id @default(cuid())
-  socioId   String
-  socio     Socio    @relation(fields: [socioId], references: [id])
-  fechaHora DateTime @default(now())
-  createdAt DateTime @default(now())
+  id           String    @id @default(cuid())
+  socioId      String?
+  socio        Socio?    @relation(fields: [socioId], references: [id])
+  empleadoId   String?
+  empleado     Empleado? @relation(fields: [empleadoId], references: [id])
+  fechaHora    DateTime  @default(now())
+  tipo         String    @default("entrada") // entrada, salida, pausa_inicio, pausa_fin
+  notas        String?
+  createdAt    DateTime  @default(now())
+}
+
+model Empleado {
+  id          String    @id @default(cuid())
+  dni         String    @unique
+  nombre      String
+  apellido    String
+  telefono    String?
+  cargo       String?
+  fechaInicio DateTime
+  horarioEntrada String  @default("09:00")
+  horarioSalida  String  @default("18:00")
+  activo      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  fichajes    Fichaje[]
 }

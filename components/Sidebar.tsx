@@ -54,7 +54,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-3 space-y-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
@@ -69,15 +69,15 @@ export default function Sidebar() {
                   : "text-[#64748B] hover:text-white hover:bg-white/5"
               }`}
               style={{
-                padding: collapsed ? "12px" : "12px 16px",
+                padding: collapsed ? "16px" : "16px 16px",
                 justifyContent: collapsed ? "center" : "flex-start",
               }}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className="w-5 h-5 shrink-0" />
+              <Icon className="w-6 h-6 shrink-0" />
               {!collapsed && (
                 <span
-                  className="font-medium text-sm ml-3 whitespace-nowrap"
+                  className="font-semibold text-base ml-3 whitespace-nowrap"
                   style={{ fontFamily: "var(--font-plus-jakarta), sans-serif" }}
                 >
                   {item.label}

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Pago } from "@prisma/client";
 
 async function fetchPagos(socioId?: string): Promise<Pago[]> {
@@ -27,6 +27,14 @@ async function createPago(data: {
   return res.json();
 }
 
+async function deletePago(id: string): Promise<void> {
+  const res = await fetch(`/api/pagos/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Error al eliminar pago");
+  }
+}
+
 export function usePagos(socioId?: string) {
   return useQuery({
     queryKey: ["pagos", socioId],
@@ -40,6 +48,19 @@ export function useCreatePago() {
     mutationFn: createPago,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["pagos", variables.socioId] });
+      queryClient.invalidateQueries({ queryKey: ["pagos"] });
+      queryClient.invalidateQueries({ queryKey: ["socios"] });
+      queryClient.invalidateQueries({ queryKey: ["socio"] });
+    },
+  });
+}
+
+export function useDeletePago() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deletePago,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pagos"] });
       queryClient.invalidateQueries({ queryKey: ["socios"] });
       queryClient.invalidateQueries({ queryKey: ["socio"] });
     },

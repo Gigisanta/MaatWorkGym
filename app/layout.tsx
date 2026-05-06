@@ -2,7 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import Sidebar from "@/components/Sidebar";
-import { Plus_Jakarta_Sans, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, DM_Sans, JetBrains_Mono, Geist, Syne } from "next/font/google";
+import { cn } from "@/lib/utils";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
+
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-syne",
+  display: "swap",
+});
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -38,12 +49,16 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${plusJakarta.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
+      className={cn(plusJakarta.variable, dmSans.variable, jetbrainsMono.variable, syne.variable, "font-sans", geist.variable)}
     >
       <body className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1" style={{ marginLeft: "var(--sidebar-width, 200px)" }}>
-          <Providers>{children}</Providers>
+          <Providers>
+            <TooltipProvider delay={200}>
+              {children}
+            </TooltipProvider>
+          </Providers>
         </main>
       </body>
     </html>
