@@ -34,6 +34,10 @@ model Socio {
   updatedAt   DateTime @updatedAt
   pagos       Pago[]
   fichajes    Fichaje[]
+  rutinas     Rutina[]
+  asignacionesRutina AsignacionRutina[]
+  dietas      Dieta[]
+  asignacionesDieta  AsignacionDieta[]
 }
 
 model Pago {
@@ -55,9 +59,32 @@ model Fichaje {
   empleadoId   String?
   empleado     Empleado? @relation(fields: [empleadoId], references: [id])
   fechaHora    DateTime  @default(now())
-  tipo         String    @default("entrada") // entrada, salida, pausa_inicio, pausa_fin
+  tipo         String    @default("entrada")
   notas        String?
   createdAt    DateTime  @default(now())
+}
+
+model Admin {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  loginAttempts Int       @default(0)
+  lockedUntil   DateTime?
+  sessions      Session[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  adminId      String
+  admin        Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  ipAddress    String?
+  userAgent    String?
 }
 
 model Empleado {
@@ -74,4 +101,101 @@ model Empleado {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   fichajes    Fichaje[]
+}
+
+model Rutina {
+  id          String    @id @default(cuid())
+  nombre      String
+  descripcion String?
+  tipo        String    @default("generica")
+  socioId     String?
+  socio       Socio?    @relation(fields: [socioId], references: [id])
+  token       String?   @unique
+  dias        DiaRutina[]
+  asignaciones AsignacionRutina[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model DiaRutina {
+  id          String    @id @default(cuid())
+  rutinaId    String
+  rutina      Rutina    @relation(fields: [rutinaId], references: [id], onDelete: Cascade)
+  diaSemana   Int
+  nombre      String?
+  ejercicios  EjercicioRutina[]
+  orden       Int
+}
+
+model EjercicioRutina {
+  id            String    @id @default(cuid())
+  diaRutinaId   String
+  diaRutina     DiaRutina @relation(fields: [diaRutinaId], references: [id], onDelete: Cascade)
+  nombre        String
+  series        Int
+  repeticiones  String
+  descanso      String
+  grupoMuscular String?
+  nota          String?
+  orden         Int
+}
+
+model AsignacionRutina {
+  id          String   @id @default(cuid())
+  rutinaId    String
+  rutina      Rutina   @relation(fields: [rutinaId], references: [id])
+  socioId     String
+  socio       Socio    @relation(fields: [socioId], references: [id])
+  parametros  String?
+  token       String   @unique
+  createdAt   DateTime @default(now())
+
+  @@unique([rutinaId, socioId])
+}
+
+model Dieta {
+  id          String    @id @default(cuid())
+  nombre      String
+  descripcion String?
+  tipo        String    @default("generica")
+  socioId     String?
+  socio       Socio?    @relation(fields: [socioId], references: [id])
+  token       String?   @unique
+  comidas     Comida[]
+  asignaciones AsignacionDieta[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Comida {
+  id        String      @id @default(cuid())
+  dietaId   String
+  dieta     Dieta       @relation(fields: [dietaId], references: [id], onDelete: Cascade)
+  nombre    String
+  hora      String
+  orden     Int
+  items     ItemComida[]
+}
+
+model ItemComida {
+  id            String  @id @default(cuid())
+  comidaId      String
+  comida        Comida  @relation(fields: [comidaId], references: [id], onDelete: Cascade)
+  alimento      String
+  cantidad      String
+  proteinas     Float?
+  carbohidratos Float?
+  grasas        Float?
+  orden         Int
+}
+
+model AsignacionDieta {
+  id          String   @id @default(cuid())
+  dietaId     String
+  dieta       Dieta    @relation(fields: [dietaId], references: [id])
+  socioId     String
+  socio       Socio    @relation(fields: [socioId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([dietaId, socioId])
 }
