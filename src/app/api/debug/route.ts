@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-  let dbTest = { status: 'not_run' };
+  let dbTest: { status: string; adminCount?: number; message?: string; code?: string; name?: string } = { status: 'not_run' };
   try {
     const count = await prisma.admin.count();
     dbTest = { status: 'ok', adminCount: count };
