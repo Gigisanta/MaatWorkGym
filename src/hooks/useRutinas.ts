@@ -1,5 +1,44 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Rutina, DiaRutina, EjercicioRutina, AsignacionRutina } from '@prisma/client';
+
+type Rutina = {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  tipo: string;
+  socioId: string | null;
+  token: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type DiaRutina = {
+  id: string;
+  rutinaId: string;
+  diaSemana: number;
+  nombre: string | null;
+  orden: number;
+};
+
+type EjercicioRutina = {
+  id: string;
+  diaRutinaId: string;
+  nombre: string;
+  series: number;
+  repeticiones: string;
+  descanso: string;
+  grupoMuscular: string | null;
+  nota: string | null;
+  orden: number;
+};
+
+type AsignacionRutina = {
+  id: string;
+  rutinaId: string;
+  socioId: string;
+  parametros: string | null;
+  token: string;
+  createdAt: Date;
+};
 
 type RutinaCompleta = Rutina & {
   socio: { id: string; nombre: string; apellido: string } | null;

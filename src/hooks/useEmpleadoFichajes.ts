@@ -1,5 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Fichaje, Empleado } from '@prisma/client';
+
+type Fichaje = {
+  id: string;
+  socioId: string | null;
+  empleadoId: string | null;
+  fechaHora: Date;
+  tipo: string;
+  notas: string | null;
+  createdAt: Date;
+};
+
+type Empleado = {
+  id: string;
+  dni: string;
+  nombre: string;
+  apellido: string;
+  telefono: string | null;
+  cargo: string | null;
+  fechaInicio: Date;
+  horarioEntrada: string;
+  horarioSalida: string;
+  activo: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 type FichajeConEmpleado = Fichaje & {
   empleado: Empleado;

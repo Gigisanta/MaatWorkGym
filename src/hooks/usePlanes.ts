@@ -1,5 +1,13 @@
 ﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Plan } from '@prisma/client';
+
+type Plan = {
+  id: string;
+  nombre: string;
+  duracionDias: number;
+  precio: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 async function fetchPlanes(): Promise<Plan[]> {
   const res = await fetch('/api/planes');

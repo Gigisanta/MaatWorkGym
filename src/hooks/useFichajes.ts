@@ -1,5 +1,40 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Fichaje, Socio, Plan } from '@prisma/client';
+
+type Plan = {
+  id: string;
+  nombre: string;
+  duracionDias: number;
+  precio: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type Socio = {
+  id: string;
+  dni: string;
+  nombre: string;
+  apellido: string;
+  telefono: string | null;
+  fechaNacimiento: Date | null;
+  fotoUrl: string | null;
+  planId: string;
+  fechaInicio: Date;
+  horarioEntrenamiento: string;
+  grupoMuscular: string | null;
+  objetivoCliente: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type Fichaje = {
+  id: string;
+  socioId: string | null;
+  empleadoId: string | null;
+  fechaHora: Date;
+  tipo: string;
+  notas: string | null;
+  createdAt: Date;
+};
 
 type FichajeConSocio = Fichaje & {
   socio: Socio & { plan: Plan };

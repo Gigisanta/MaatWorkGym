@@ -1,5 +1,41 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Dieta, Comida, ItemComida, AsignacionDieta } from '@prisma/client';
+
+type Dieta = {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  tipo: string;
+  socioId: string | null;
+  token: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type Comida = {
+  id: string;
+  dietaId: string;
+  nombre: string;
+  hora: string;
+  orden: number;
+};
+
+type ItemComida = {
+  id: string;
+  comidaId: string;
+  alimento: string;
+  cantidad: string;
+  proteinas: number | null;
+  carbohidratos: number | null;
+  grasas: number | null;
+  orden: number;
+};
+
+type AsignacionDieta = {
+  id: string;
+  dietaId: string;
+  socioId: string;
+  createdAt: Date;
+};
 
 type DietaCompleta = Dieta & {
   socio: { id: string; nombre: string; apellido: string } | null;

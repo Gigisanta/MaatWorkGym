@@ -1,6 +1,51 @@
-import type { Socio, Plan, Pago, Fichaje } from '@prisma/client';
-
 export type PlanType = { id?: string; nombre: string; duracionDias: number; precio: number };
+
+type Plan = {
+  id: string;
+  nombre: string;
+  duracionDias: number;
+  precio: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type Socio = {
+  id: string;
+  dni: string;
+  nombre: string;
+  apellido: string;
+  telefono: string | null;
+  fechaNacimiento: Date | null;
+  fotoUrl: string | null;
+  planId: string;
+  fechaInicio: Date;
+  horarioEntrenamiento: string;
+  grupoMuscular: string | null;
+  objetivoCliente: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type Pago = {
+  id: string;
+  socioId: string;
+  monto: number;
+  metodo: string;
+  fechaPago: Date;
+  mes: number;
+  anio: number;
+  createdAt: Date;
+};
+
+type Fichaje = {
+  id: string;
+  socioId: string | null;
+  empleadoId: string | null;
+  fechaHora: Date;
+  tipo: string;
+  notas: string | null;
+  createdAt: Date;
+};
 
 export type SocioConEstado = Socio & {
   plan: Plan;

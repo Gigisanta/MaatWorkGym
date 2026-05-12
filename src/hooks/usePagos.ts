@@ -1,5 +1,15 @@
 ﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Pago } from '@prisma/client';
+
+type Pago = {
+  id: string;
+  socioId: string;
+  monto: number;
+  metodo: string;
+  fechaPago: Date;
+  mes: number;
+  anio: number;
+  createdAt: Date;
+};
 
 async function fetchPagos(socioId?: string): Promise<Pago[]> {
   const url = socioId ? `/api/pagos?socioId=${socioId}` : '/api/pagos';
