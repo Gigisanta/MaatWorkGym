@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import type { Fichaje } from '@prisma/client';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const tieneDeuda =
       !ultimoPago || ultimoPago.mes !== mesActual || ultimoPago.anio !== anioActual;
 
-    const visitasMesActual = socio.fichajes.filter((f) => {
+    const visitasMesActual = socio.fichajes.filter((f: Fichaje) => {
       const fMes = f.fechaHora.getMonth() + 1;
       const fAnio = f.fechaHora.getFullYear();
       return fMes === mesActual && fAnio === anioActual;
