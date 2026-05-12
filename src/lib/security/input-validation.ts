@@ -29,7 +29,7 @@ export function validatePassword(password: unknown): ValidationResult {
     errors.push('Contrasenia debe ser una cadena de texto');
     return { valid: false, errors };
   }
-  if (password.length < 8) errors.push('Contrasenia debe tener al menos 8 caracteres');
+  if (password.length < 4) errors.push('Contrasenia debe tener al menos 4 caracteres');
   if (password.length > 128) errors.push('Contrasenia no puede exceder 128 caracteres');
   return { valid: errors.length === 0, errors };
 }
