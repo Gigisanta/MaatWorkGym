@@ -5,7 +5,7 @@
   "scripts": {
     "predev": "powershell -File scripts/cleanup.ps1",
     "dev": "next dev",
-    "build": "DATABASE_URL='postgresql://placeholder:placeholder@localhost:5432/placeholder' prisma generate && next build",
+    "build": "DATABASE_URL=noop prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
