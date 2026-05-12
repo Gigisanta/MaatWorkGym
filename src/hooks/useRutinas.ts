@@ -107,7 +107,7 @@ async function updateRutina(
     tipo?: string;
     socioId?: string;
     dias: DiaInput[];
-  }
+  },
 ): Promise<RutinaCompleta> {
   const res = await fetch(`/api/rutinas/${id}`, {
     method: 'PUT',
@@ -127,7 +127,12 @@ async function asignarRutina(data: {
   rutinaId: string;
   socioId: string;
   parametros?: Record<string, any>;
-}): Promise<AsignacionRutina & { rutina: RutinaCompleta; socio: { id: string; nombre: string; apellido: string } }> {
+}): Promise<
+  AsignacionRutina & {
+    rutina: RutinaCompleta;
+    socio: { id: string; nombre: string; apellido: string };
+  }
+> {
   const res = await fetch('/api/asignaciones/rutina', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -137,7 +142,14 @@ async function asignarRutina(data: {
   return res.json();
 }
 
-async function fetchAsignaciones(socioId?: string): Promise<(AsignacionRutina & { rutina: RutinaCompleta; socio: { id: string; nombre: string; apellido: string } })[]> {
+async function fetchAsignaciones(
+  socioId?: string,
+): Promise<
+  (AsignacionRutina & {
+    rutina: RutinaCompleta;
+    socio: { id: string; nombre: string; apellido: string };
+  })[]
+> {
   const url = socioId ? `/api/asignaciones/rutina?socioId=${socioId}` : '/api/asignaciones/rutina';
   const res = await fetch(url);
   if (!res.ok) throw new Error('Error al obtener asignaciones');

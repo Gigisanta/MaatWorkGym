@@ -210,23 +210,17 @@ export async function POST() {
 
     return NextResponse.json({ success: true, message: 'Database initialized' });
   } catch (e: any) {
-    return NextResponse.json(
-      { success: false, error: e.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
 }
 
 export async function GET() {
   try {
     const result = await prisma.$queryRawUnsafe<{ tablename: string }[]>(
-      "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+      "SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
     );
-    return NextResponse.json({ success: true, tables: result.map(r => r.tablename) });
+    return NextResponse.json({ success: true, tables: result.map((r) => r.tablename) });
   } catch (e: any) {
-    return NextResponse.json(
-      { success: false, error: e.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
 }

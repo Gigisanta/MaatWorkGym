@@ -11,7 +11,7 @@ export async function POST() {
       return NextResponse.json({ message: 'Admin already exists', exists: true }, { status: 200 });
     }
 
-    const defaultPassword = 'admin1234';
+    const defaultPassword = 'admin';
     const passwordHash = await hashPassword(defaultPassword);
 
     const admin = await prisma.admin.create({

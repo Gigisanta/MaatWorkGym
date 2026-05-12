@@ -103,7 +103,7 @@ async function updateDieta(
     tipo?: string;
     socioId?: string;
     comidas: ComidaInput[];
-  }
+  },
 ): Promise<DietaCompleta> {
   const res = await fetch(`/api/dietas/${id}`, {
     method: 'PUT',
@@ -122,7 +122,12 @@ async function deleteDieta(id: string): Promise<void> {
 async function asignarDieta(data: {
   dietaId: string;
   socioId: string;
-}): Promise<AsignacionDieta & { dieta: DietaCompleta; socio: { id: string; nombre: string; apellido: string } }> {
+}): Promise<
+  AsignacionDieta & {
+    dieta: DietaCompleta;
+    socio: { id: string; nombre: string; apellido: string };
+  }
+> {
   const res = await fetch('/api/asignaciones/dieta', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -132,7 +137,14 @@ async function asignarDieta(data: {
   return res.json();
 }
 
-async function fetchAsignaciones(socioId?: string): Promise<(AsignacionDieta & { dieta: DietaCompleta; socio: { id: string; nombre: string; apellido: string } })[]> {
+async function fetchAsignaciones(
+  socioId?: string,
+): Promise<
+  (AsignacionDieta & {
+    dieta: DietaCompleta;
+    socio: { id: string; nombre: string; apellido: string };
+  })[]
+> {
   const url = socioId ? `/api/asignaciones/dieta?socioId=${socioId}` : '/api/asignaciones/dieta';
   const res = await fetch(url);
   if (!res.ok) throw new Error('Error al obtener asignaciones');
