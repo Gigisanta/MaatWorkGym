@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+interface SocioConRelaciones {
+  pagos: { mes: number; anio: number }[];
+  fechaInicio: Date;
+  [key: string]: unknown;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -34,7 +40,7 @@ export async function GET(request: NextRequest) {
     const mesActual = hoy.getMonth() + 1;
     const anioActual = hoy.getFullYear();
 
-    const sociosConEstado = socios.map((socio) => {
+    const sociosConEstado = socios.map((socio: SocioConRelaciones) => {
       const ultimoPago = socio.pagos[0];
       const tieneDeuda =
         !ultimoPago || ultimoPago.mes !== mesActual || ultimoPago.anio !== anioActual;
