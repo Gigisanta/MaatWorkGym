@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: "C:\\Users\\gioli\\Desktop\\MaatWorkGym",
+    // removed Windows path - was causing build failures on Linux builder
   },
 };
 
