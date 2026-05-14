@@ -412,9 +412,9 @@ async function seedEcommerce() {
 
   // Coupons
   const coupons = [
-    { code: 'BIENVENIDO', title: 'Descuento de Bienvenida', description: '15% off en tu primera compra', discountType: 'percentage' as const, discountValue: 15, minPurchase: 0, maxDiscount: 5000, usageLimit: 1, featured: true, active: true },
-    { code: 'ENVIOGRATIS', title: 'Envío Gratis', description: 'Envío sin costo en compras mayores a $20.000', discountType: 'fixed' as const, discountValue: 2500, minPurchase: 20000, featured: false, active: true },
-    { code: 'PUMP10', title: '10% Extra', description: '10% adicional en pre-entrenos', discountType: 'percentage' as const, discountValue: 10, minPurchase: 0, featured: false, active: true },
+    { code: 'BIENVENIDO', title: 'Descuento de Bienvenida', description: '15% off en tu primera compra', discountType: 'percentage', discountValue: 15, minPurchase: 0, maxDiscount: 5000, usageLimit: 1, validFrom: null, validUntil: null, applicableCategories: [], featured: true, active: true },
+    { code: 'ENVIOGRATIS', title: 'Envío Gratis', description: 'Envío sin costo en compras mayores a $20.000', discountType: 'fixed', discountValue: 2500, minPurchase: 20000, maxDiscount: null, usageLimit: null, validFrom: null, validUntil: null, applicableCategories: [], featured: false, active: true },
+    { code: 'PUMP10', title: '10% Extra', description: '10% adicional en pre-entrenos', discountType: 'percentage', discountValue: 10, minPurchase: 0, maxDiscount: null, usageLimit: null, validFrom: null, validUntil: null, applicableCategories: [], featured: false, active: true },
   ];
   for (const coupon of coupons) {
     await prisma.coupon.create({ data: coupon });
