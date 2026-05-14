@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ idOrSlug: string }> }) {
   try {
-    const { id } = await params;
-    const product = await prisma.product.findUnique({
-      where: { id },
+    const { idOrSlug } = await params;
+
+    // Try by ID first (UUID format), then by slug
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+
+    const product = await prisma.product.findFirst({
+      where: isUUID ? { id: idOrSlug } : { slug: idOrSlug },
       include: {
         category: true,
         variants: { orderBy: { price: 'asc' } },
@@ -33,7 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
   } catch (error) {
-    console.error('GET /api/ecommerce/products/[id] error:', error);
+    console.error('GET /api/ecommerce/products/[idOrSlug] error:', error);
     return NextResponse.json(
       { success: false, error: { code: 'SERVER_ERROR', message: 'Error al obtener producto' } },
       { status: 500 }
@@ -41,9 +45,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ idOrSlug: string }> }) {
   try {
-    const { id } = await params;
+    const { idOrSlug } = await params;
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+
+    const existing = await prisma.product.findFirst({
+      where: isUUID ? { id: idOrSlug } : { slug: idOrSlug },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Producto no encontrado' } },
+        { status: 404 }
+      );
+    }
+
     const body = await req.json();
     const {
       name,
@@ -69,21 +86,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       variants,
     } = body;
 
-    // Check if product exists
-    const existing = await prisma.product.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Producto no encontrado' } },
-        { status: 404 }
-      );
-    }
-
-    // Generate slug from name if not provided
     const finalSlug = slug || (name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : undefined);
 
-    // Update product with variants: delete existing variants and create new ones
     const product = await prisma.product.update({
-      where: { id },
+      where: { id: existing.id },
       data: {
         ...(name !== undefined && { name }),
         ...(slug !== undefined && { slug: finalSlug }),
@@ -125,21 +131,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
 
-    // Update category product count if category changed
     if (categoryId && categoryId !== existing.categoryId) {
       const [oldCount, newCount] = await Promise.all([
         prisma.product.count({ where: { categoryId: existing.categoryId } }),
         prisma.product.count({ where: { categoryId } }),
       ]);
       await Promise.all([
-        prisma.ecommerceCategory.update({
-          where: { id: existing.categoryId },
-          data: { productCount: oldCount },
-        }),
-        prisma.ecommerceCategory.update({
-          where: { id: categoryId },
-          data: { productCount: newCount },
-        }),
+        prisma.ecommerceCategory.update({ where: { id: existing.categoryId }, data: { productCount: oldCount } }),
+        prisma.ecommerceCategory.update({ where: { id: categoryId }, data: { productCount: newCount } }),
       ]);
     }
 
@@ -147,17 +146,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const minOriginal = Math.min(...product.variants.map((v) => v.originalPrice || v.price));
     const discount = minOriginal > minPrice ? Math.round(((minOriginal - minPrice) / minOriginal) * 100) : 0;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        ...product,
-        discount,
-        minPrice,
-        minOriginalPrice: minOriginal,
-      },
-    });
+    return NextResponse.json({ success: true, data: { ...product, discount, minPrice, minOriginalPrice: minOriginal } });
   } catch (error) {
-    console.error('PUT /api/ecommerce/products/[id] error:', error);
+    console.error('PUT /api/ecommerce/products/[idOrSlug] error:', error);
     return NextResponse.json(
       { success: false, error: { code: 'SERVER_ERROR', message: 'Error al actualizar producto' } },
       { status: 500 }
@@ -165,13 +156,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ idOrSlug: string }> }) {
   try {
-    const { id } = await params;
+    const { idOrSlug } = await params;
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
 
-    // Check if product exists
-    const product = await prisma.product.findUnique({
-      where: { id },
+    const product = await prisma.product.findFirst({
+      where: isUUID ? { id: idOrSlug } : { slug: idOrSlug },
       include: { category: true },
     });
 
@@ -182,9 +173,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       );
     }
 
-    await prisma.product.delete({ where: { id } });
+    await prisma.product.delete({ where: { id: product.id } });
 
-    // Update category product count
     if (product.categoryId) {
       const count = await prisma.product.count({ where: { categoryId: product.categoryId } });
       await prisma.ecommerceCategory.update({
@@ -195,7 +185,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('DELETE /api/ecommerce/products/[id] error:', error);
+    console.error('DELETE /api/ecommerce/products/[idOrSlug] error:', error);
     return NextResponse.json(
       { success: false, error: { code: 'SERVER_ERROR', message: 'Error al eliminar producto' } },
       { status: 500 }
