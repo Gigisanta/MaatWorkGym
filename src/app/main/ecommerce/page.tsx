@@ -241,7 +241,14 @@ export default function EcommerceDashboardPage() {
             <p className="text-xs text-muted-foreground hidden sm:block">Panel de gestión de tienda</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+          <a
+            href="/main"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-lg text-sm font-semibold transition-all"
+          >
+            <span>⚙️</span>
+            <span>Panel Gym</span>
+          </a>
           <a
             href="/shop"
             target="_blank"

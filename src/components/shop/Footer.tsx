@@ -70,6 +70,7 @@ export default function ShopFooter() {
                 { label: 'Ofertas', href: '/shop/ofertas' },
                 { label: 'Mi Cuenta', href: '/shop/cuenta' },
                 { label: 'Wishlist', href: '/shop/wishlist' },
+                { label: 'Panel Admin', href: '/main' },
               ].map(link => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-gray-400 text-sm hover:text-orange-400 transition-colors">
