@@ -15,11 +15,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { code, discountType, discountValue, active = true } = body;
+    const { code, title, description, discountType, discountValue, active = true, minPurchase, maxDiscount, usageLimit, validFrom, validUntil, applicableCategories, featured } = body;
 
-    if (!code || !discountType || discountValue === undefined) {
+    if (!code || !title || !discountType || discountValue === undefined) {
       return NextResponse.json(
-        { error: 'Missing required fields: code, discountType, discountValue' },
+        { error: 'Missing required fields: code, title, discountType, discountValue' },
         { status: 400 }
       );
     }
@@ -34,9 +34,18 @@ export async function POST(request: Request) {
     const coupon = await prisma.coupon.create({
       data: {
         code,
+        title,
+        description,
         discountType,
         discountValue,
         active,
+        minPurchase,
+        maxDiscount,
+        usageLimit,
+        validFrom,
+        validUntil,
+        applicableCategories,
+        featured,
       },
     });
 

@@ -3,10 +3,10 @@ import { NextResponse } from 'next/server';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -23,7 +23,7 @@ export async function GET(
     }
 
     return NextResponse.json(order);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch order' },
       { status: 500 }
@@ -43,10 +43,10 @@ const VALID_STATUSES = [
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { status, tracking } = body;
 
@@ -77,7 +77,7 @@ export async function PUT(
     }
 
     return NextResponse.json(order);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to update order' },
       { status: 500 }
