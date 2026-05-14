@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/lib/auth/auth-context';
 
 const navItems = [
   {
@@ -59,6 +60,12 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const pathname = usePathname();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -141,7 +148,10 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
               {/* Logout */}
               <div className="p-3 border-t border-sidebar-border">
-                <button className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive hover:text-white transition-colors font-semibold">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive hover:text-white transition-colors font-semibold"
+                >
                   <LogOut size={20} />
                   <span>Cerrar Sesión</span>
                 </button>
