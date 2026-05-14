@@ -13,6 +13,7 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['node_modules', 'src/**/*.d.ts'],
     },
+    setupFiles: ['./src/test/setup.ts'],
   },
   resolve: {
     alias: {

@@ -243,7 +243,7 @@ export default function EcommerceDashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <a
-            href="https://suplementos.sevjo.maat.work"
+            href="/shop"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-orange-500/20"

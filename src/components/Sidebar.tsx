@@ -16,6 +16,7 @@ import {
   Ticket,
   Settings,
   ChevronDown,
+  ShoppingBag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -57,6 +58,14 @@ const navItems = [
     href: '/main/estadisticas',
     icon: BarChart3,
     description: 'Reportes y métricas',
+  },
+  {
+    id: 'ver-tienda',
+    label: 'Ver Tienda',
+    href: '/shop',
+    icon: ShoppingBag,
+    description: 'Tienda online',
+    external: true,
   },
 ];
 
@@ -140,6 +149,8 @@ export default function Sidebar({ activeSection }: SidebarProps) {
             <Link
               key={item.id}
               href={item.href}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noopener noreferrer' : undefined}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-150",
                 isActive

@@ -337,6 +337,102 @@ html {
   }
 }
 
+/* ===== SHOP DARK MODE ===== */
+.shop-dark {
+  --color-primary: #f97316;
+  --color-primary-dark: #ea580c;
+  --color-secondary: #dc2626;
+  --color-bg: #030712;
+  --color-surface: #111827;
+  --color-surface-2: #1f2937;
+  --color-surface-3: #374151;
+  --color-border: #374151;
+  --color-text: #f9fafb;
+  --color-text-muted: #9ca3af;
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+}
+
+/* Apply dark to shop root */
+.shop-dark body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* ==========================================
+   SHOP ANIMATIONS
+   ========================================== */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.6); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ==========================================
+   SHOP UTILITIES
+   ========================================== */
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #f97316, #dc2626);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Line clamp */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .animate-fade-in-up {
   animation: fade-in-up 0.4s ease-out forwards;
 }
