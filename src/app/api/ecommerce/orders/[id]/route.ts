@@ -57,9 +57,9 @@ export async function PUT(
       );
     }
 
-    const updateData: { status?: string; tracking?: string } = {};
+    const updateData: { status?: string; trackingNumber?: string } = {};
     if (status !== undefined) updateData.status = status;
-    if (tracking !== undefined) updateData.tracking = tracking;
+    if (tracking !== undefined) updateData.trackingNumber = tracking;
 
     const order = await prisma.order.update({
       where: { id },
@@ -69,15 +69,9 @@ export async function PUT(
       },
     });
 
-    if (!order) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(order);
-  } catch {
+  } catch (error) {
+    console.error('PUT /api/ecommerce/orders/[id] error:', error);
     return NextResponse.json(
       { error: 'Failed to update order' },
       { status: 500 }
