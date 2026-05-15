@@ -793,6 +793,16 @@ export default function ProductosPage() {
   const handleSaveProduct = async (formData: ProductFormData, variants: ProductVariant[]) => {
     setIsSaving(true);
     try {
+      // Clean variants: remove ids from new variants, keep price/stock
+      const cleanVariants = variants.map((v) => ({
+        flavor: v.flavor || '',
+        size: v.size || '',
+        price: v.price,
+        originalPrice: v.originalPrice || 0,
+        stock: v.stock || 0,
+        sku: v.sku || '',
+      }));
+
       const payload = {
         ...formData,
         tags: formData.tags ? formData.tags.split(',').map((t) => t.trim()) : [],
@@ -802,6 +812,7 @@ export default function ProductosPage() {
         featured: formData.featured || undefined,
         bestSeller: formData.bestSeller || undefined,
         isNew: formData.isNew || undefined,
+        variants: cleanVariants,
       };
 
       let res;
@@ -820,28 +831,6 @@ export default function ProductosPage() {
       }
 
       if (res.ok) {
-        const result = await res.json();
-        const productId = editingProduct?.id || result.id;
-
-        // Handle variants
-        for (const variant of variants) {
-          if (variant.id) {
-            // Update existing variant
-            await fetch(`/api/ecommerce/variants/${variant.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(variant),
-            });
-          } else {
-            // Create new variant
-            await fetch(`/api/ecommerce/products/${productId}/variants`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(variant),
-            });
-          }
-        }
-
         // Refresh products
         await fetchProducts();
         setShowProductModal(false);
