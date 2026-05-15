@@ -91,7 +91,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error) {
-    console.error('DELETE /api/ecommerce/orders/[id] error:', error);
+    console.error('DELETE /api/ecommerce/orders/[id] error:', String(error));
     return NextResponse.json(
       { error: 'Failed to delete order' },
       { status: 500 }
