@@ -109,7 +109,7 @@ interface SidebarProps {
 export default function Sidebar({ activeSection }: SidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
-  const [ecommerceExpanded, setEcommerceExpanded] = useState(false);
+  const [ecommerceExpanded, setEcommerceExpanded] = useState(true);
 
   const handleLogout = async () => {
     await logout();

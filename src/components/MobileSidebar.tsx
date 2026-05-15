@@ -9,11 +9,20 @@ import {
   Dumbbell,
   UtensilsCrossed,
   LogOut,
-  X
+  X,
+  Store,
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Ticket,
+  Settings,
+  ChevronDown,
+  ShoppingBag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useState } from 'react';
 
 const navItems = [
   {
@@ -51,6 +60,47 @@ const navItems = [
     icon: BarChart3,
     description: 'Reportes y métricas',
   },
+  {
+    id: 'ver-tienda',
+    label: 'Ver Tienda',
+    href: '/shop',
+    icon: ShoppingBag,
+    description: 'Tienda online',
+    external: true,
+  },
+];
+
+const ecommerceSubItems = [
+  {
+    id: 'ecommerce-dashboard',
+    label: 'Dashboard',
+    href: '/main/ecommerce',
+    icon: LayoutDashboard,
+  },
+  {
+    id: 'ecommerce-productos',
+    label: 'Productos',
+    href: '/main/ecommerce/productos',
+    icon: Package,
+  },
+  {
+    id: 'ecommerce-ordenes',
+    label: 'Órdenes',
+    href: '/main/ecommerce/ordenes',
+    icon: ShoppingCart,
+  },
+  {
+    id: 'ecommerce-cupones',
+    label: 'Cupones',
+    href: '/main/ecommerce/cupones',
+    icon: Ticket,
+  },
+  {
+    id: 'ecommerce-config',
+    label: 'Config',
+    href: '/main/ecommerce/config',
+    icon: Settings,
+  },
 ];
 
 interface MobileSidebarProps {
@@ -61,6 +111,11 @@ interface MobileSidebarProps {
 export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
+  const [ecommerceExpanded, setEcommerceExpanded] = useState(false);
+
+  const isEcommerceActive = ecommerceSubItems.some(
+    (item) => pathname.startsWith(item.href)
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -125,6 +180,8 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                       key={item.id}
                       href={item.href}
                       onClick={onClose}
+                      target={item.external ? '_blank' : undefined}
+                      rel={item.external ? 'noopener noreferrer' : undefined}
                       className={cn(
                         "flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-150",
                         isActive
@@ -144,6 +201,68 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                     </Link>
                   );
                 })}
+
+                {/* Ecommerce Section */}
+                <div className="mt-2 mb-1">
+                  <button
+                    onClick={() => setEcommerceExpanded(!ecommerceExpanded)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150",
+                      isEcommerceActive
+                        ? "bg-primary text-[#1a1a1a]"
+                        : "hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <Store className="w-5 h-5" />
+                    <div className="flex-1 flex flex-col text-left">
+                      <span className="text-sm font-semibold">Ecommerce</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 transition-transform duration-200",
+                        ecommerceExpanded && "rotate-180"
+                      )}
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {ecommerceExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="ml-4 mt-1 pl-4 border-l border-sidebar-border">
+                          {ecommerceSubItems.map((item) => {
+                            const isActive = pathname.startsWith(item.href);
+                            const Icon = item.icon;
+
+                            return (
+                              <Link
+                                key={item.id}
+                                href={item.href}
+                                onClick={onClose}
+                                className={cn(
+                                  "flex items-center gap-3 px-4 py-2.5 rounded-xl mb-0.5 transition-all duration-150",
+                                  isActive
+                                    ? "bg-primary text-[#1a1a1a]"
+                                    : "hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground"
+                                )}
+                              >
+                                <Icon className="w-4 h-4" />
+                                <span className="text-sm font-medium">
+                                  {item.label}
+                                </span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </nav>
 
               {/* Logout */}
