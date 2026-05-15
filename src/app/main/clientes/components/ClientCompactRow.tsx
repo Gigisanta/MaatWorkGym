@@ -4,7 +4,7 @@ import { SocioConEstado } from '../types/client';
 import { MembershipStatusDot, getMembershipStatus } from './MembershipStatusDot';
 import { ObjectiveBadges } from './ObjectiveBadges';
 import { QuickActionsMenu } from './QuickActionsMenu';
-import { ChevronDown, Phone, Calendar, Target, Activity, Dumbbell } from 'lucide-react';
+import { ChevronDown, Phone, Activity, Dumbbell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GRUPO_MUSCULAR_LABELS, GrupoMuscularType } from '../types/client';
 import { cn } from '@/lib/utils';
@@ -23,13 +23,7 @@ function getInitials(nombre: string, apellido: string): string {
   return `${nombre[0] || ''}${apellido[0] || ''}`.toUpperCase();
 }
 
-function formatDate(date: Date | string): string {
-  return new Date(date).toLocaleDateString('es-AR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
+// formatDate utility available in @/lib/utils
 
 function getVencimiento(socio: SocioConEstado): string {
   if (!socio.venceEn) return 'Sin datos';

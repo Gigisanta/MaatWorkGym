@@ -98,7 +98,7 @@ export async function POST() {
       return NextResponse.json({ message: 'Ya hay datos', count: existing });
     }
 
-    const data = await seed();
+    await seed();
     logger.info('Seed completado');
 
     return NextResponse.json({

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   X,
   ArrowLeft,
@@ -15,7 +15,6 @@ import {
   DollarSign,
   Edit2,
   Trash2,
-  User,
   Fingerprint,
   Activity,
   Target,
